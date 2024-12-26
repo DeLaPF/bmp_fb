@@ -1,0 +1,9 @@
+# clagnd
+.cache/
+
+# output
+builds/
+compile_commands.json
+
+# imgui
+imgui.ini
