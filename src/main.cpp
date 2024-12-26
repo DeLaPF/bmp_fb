@@ -26,12 +26,6 @@ static unsigned int packVertex(unsigned int x, unsigned int y, unsigned int s, u
     vertex |= (s << 20) & MASK_S;
     vertex |= (t << 21) & MASK_T;
 
-    std::cout << std::bitset<32>(vertex) << std::endl;
-    float d_x = float((vertex&MASK_X) >>  0);
-    float d_y = float((vertex&MASK_Y) >> 10);
-    float d_s = float((vertex&MASK_S) >> 20);
-    float d_t = float((vertex&MASK_T) >> 21);
-    std::cout << std::format("x:{}, y:{}, s:{}, t:{}", d_x, d_y, d_s, d_t) << std::endl;
     return vertex;
 }
 
@@ -114,7 +108,6 @@ int main(int argc, char **argv) {
         exit(1);
     }
     unsigned int shader = shaderIds[0];
-    std::cout << pairs[0].fragPath << " | " << pairs[0].vertPath << std::endl;
     glUseProgram(shader);
     int uRes = glGetUniformLocation(shader, "u_Res");
     int uWorldProj = glGetUniformLocation(shader, "u_WorldProj");
