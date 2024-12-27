@@ -1,9 +1,8 @@
 #include "bitmap_fb.hpp"
 
-#include "glad/gl.h"
-#include <bitset>
-#include <format>
 #include <iostream>
+
+#include "glad/gl.h"
 
 BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
 {
@@ -11,9 +10,12 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
     const unsigned int indsPerQuad = 6;
     unsigned int totalPixels = width*height;
 
-    m_vertices.reserve(totalPixels*vertsPerQuad);
-    m_colors.reserve(totalPixels*vertsPerQuad);
-    m_indices.reserve(totalPixels*indsPerQuad);
+    this->m_vertices.reserve(totalPixels*vertsPerQuad);
+    this->m_indices.reserve(totalPixels*indsPerQuad);
+    this->m_bitmap = std::make_shared<Bitmap>();
+    // TODO: offer option for binary colors packed into bytes (8 pixels per byte)
+    this->m_bitmap->reserve(totalPixels);
+    for (unsigned int i = 0; i < totalPixels; i++) { this->m_bitmap->push_back(0); }
 
     this->width = width;
     this->height = height;
@@ -25,8 +27,6 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
             this->m_vertices.push_back(packVertex({x+1, y+0, 1, 0}));
             this->m_vertices.push_back(packVertex({x+0, y+0, 0, 0}));
 
-            // TODO: add colors
-
             // Add indices
             unsigned int indOff = (y*width + x)*vertsPerQuad;
             this->m_indices.push_back(0+indOff);
@@ -37,44 +37,46 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
             this->m_indices.push_back(0+indOff);
         }
     }
-    // std::cout << "vertices: ";
-    // for (const auto &num : this->m_vertices) {
-    //     // std::cout << std::bitset<32>(num) << " ";
-    //     UVertex uv = unpackVertex(num);
-    //     std::cout << std::format("(x:{} y:{} s:{} t:{})", uv.x, uv.y, uv.s, uv.t) << " ";
-    // }
-    // std::cout << std::endl;
-    // std::cout << "indices:";
-    // for (const auto &num : this->m_indices ) {
-    //     std::cout << num << " ";
-    // }
-    // std::cout << std::endl;
 
     glGenVertexArrays(1, &this->m_vao);
     glBindVertexArray(this->m_vao);
 
     glGenBuffers(1, &this->m_vboVertex);
     glBindBuffer(GL_ARRAY_BUFFER, this->m_vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, m_vertices.size()*sizeof(unsigned int), &this->m_vertices[0], GL_STATIC_DRAW);
-    // TODO: zero dynamic color buffer data
-    // may actually be better to use an SSBO (Shader Storage Buffer Object),
-    // since we can avoid quadruple defining color values
-    // and they support up to 128mb, currently the max bitmap is 1024x1024,
-    // colors will be packed into uint32 as rgba (8-8-8-8),
-    // which would only be ~5mb with 16mil colors (only support GL 4.3+)
+    glBufferData(GL_ARRAY_BUFFER, this->m_vertices.size()*sizeof(unsigned int), &this->m_vertices[0], GL_STATIC_DRAW);
+
+    glCreateBuffers(1, &this->m_ssboColor);
+    // TODO: offer options for:
+    //  - binary colors: 8 pixels per byte
+    //  - rgba: 1 byte per channel
+    //  - (maybe should just be rgb since I don't think will be stacked?)
+    glNamedBufferStorage(this->m_ssboColor, this->m_bitmap->size()*sizeof(unsigned int), (const void *)0, GL_DYNAMIC_STORAGE_BIT);
+    // color ssbo
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->m_ssboColor);
 
     glGenBuffers(1, &this->m_ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size()*sizeof(unsigned int), &this->m_indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->m_indices.size()*sizeof(unsigned int), &this->m_indices[0], GL_STATIC_DRAW);
 
-    // packed vertices
+    // uint32 packed vertices
     glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, 0);
     glEnableVertexAttribArray(0);
-    // TODO: add color attrib pointer
 }
 
 BitmapFramebuffer::~BitmapFramebuffer()
 {
+}
+
+std::shared_ptr<Bitmap> BitmapFramebuffer::getBitmap()
+{
+    return this->m_bitmap;
+}
+
+void BitmapFramebuffer::updateBitmap()
+{
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->m_ssboColor);
+    // glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->m_bitmap->size()*sizeof(unsigned int), &((*this->m_bitmap)[0]));
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->m_bitmap->size()*sizeof(unsigned int), &this->m_bitmap->at(0));
 }
 
 void BitmapFramebuffer::render()

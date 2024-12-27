@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 struct UVertex {
@@ -10,22 +11,28 @@ struct UVertex {
 };
 typedef unsigned int PVertex;
 
+typedef std::vector<unsigned int> Bitmap;
+
 class BitmapFramebuffer {
 public:
     BitmapFramebuffer(unsigned int width, unsigned int height);
     ~BitmapFramebuffer();
+
+    std::shared_ptr<Bitmap> getBitmap();
+
+    void updateBitmap();
 
     void render();
 private:
     unsigned int width;
     unsigned int height;
     std::vector<unsigned int> m_vertices;
-    std::vector<unsigned int> m_colors;
     std::vector<unsigned int> m_indices;
+    std::shared_ptr<Bitmap> m_bitmap;
 
     unsigned int m_vao;
     unsigned int m_vboVertex;
-    unsigned int m_vboColor;
+    unsigned int m_ssboColor;
     unsigned int m_ibo;
 };
 

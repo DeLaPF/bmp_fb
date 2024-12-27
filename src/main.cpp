@@ -46,9 +46,15 @@ int main(int argc, char **argv) {
     ImGui_ImplSDL2_InitForOpenGL(window, glContext);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    unsigned int bmpW = 10;
-    unsigned int bmpH = 10;
+    unsigned int bmpW = 11;
+    unsigned int bmpH = 11;
     BitmapFramebuffer bfb(bmpW, bmpH);
+    auto bitmap = bfb.getBitmap();
+    for (auto i = 0; i < bitmap->size(); i++) { bitmap->at(i) = i%2 == 0 ? 0xFFFFFF : 0; }
+    bfb.updateBitmap();
+
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
     float worldProjMat[] = {
         2.0f/bmpW,  0.0f, -1.0f,
         0.0f, -2.0f/bmpH,  1.0f,
@@ -67,8 +73,12 @@ int main(int argc, char **argv) {
     unsigned int shader = shaderIds[0];
     glUseProgram(shader);
     int uRes = glGetUniformLocation(shader, "u_Res");
+    int uBitmapDim = glGetUniformLocation(shader, "u_BitmapDim");
     int uWorldProj = glGetUniformLocation(shader, "u_WorldProj");
+    glUniform2i(uRes, w, h);
+    glUniform2i(uBitmapDim, bmpW, bmpH);
     glUniformMatrix3fv(uWorldProj, 1, GL_TRUE, worldProjMat);
+
 
     // Main loop
     bool running = true;
@@ -95,11 +105,6 @@ int main(int argc, char **argv) {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-
-        // Update uniforms
-        int w, h;
-        SDL_GetWindowSize(window, &w, &h);
-        glUniform2f(uRes, (float)w, (float)h);
 
         // Clear main screen
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
