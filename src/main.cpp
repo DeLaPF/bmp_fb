@@ -1,8 +1,7 @@
-#include <array>
-#include <bitset>
 #include <iostream>
 #include <format>
 
+#include "bitmap_fb.hpp"
 #include "glad/gl.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -12,22 +11,6 @@
 
 #include "gl_helpers.hpp"
 #include "shader_linker.hpp"
-
-const unsigned int MASK_X = 0x0003FF;
-const unsigned int MASK_Y = 0x0FFC00;
-const unsigned int MASK_S = 0x100000;
-const unsigned int MASK_T = 0x200000;
-const unsigned int MASK_NONE = 0xFFC00000;
-static unsigned int packVertex(unsigned int x, unsigned int y, unsigned int s, unsigned int t)
-{
-    unsigned int vertex = 0;
-    vertex |= (x <<  0) & MASK_X;
-    vertex |= (y << 10) & MASK_Y;
-    vertex |= (s << 20) & MASK_S;
-    vertex |= (t << 21) & MASK_T;
-
-    return vertex;
-}
 
 int main(int argc, char **argv) {
     // Initialize SDL
@@ -63,40 +46,14 @@ int main(int argc, char **argv) {
     ImGui_ImplSDL2_InitForOpenGL(window, glContext);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    std::array<unsigned int, 4> verts = {
-        packVertex(0, 1, 0, 1),
-        packVertex(1, 1, 1, 1),
-        packVertex(1, 0, 1, 0),
-        packVertex(0, 0, 0, 0),
-    };
-    const unsigned int numIndices = 6;
-    unsigned int indices[6] = {
-        0, 1, 2,
-        2, 3, 0
-    };
+    unsigned int bmpW = 10;
+    unsigned int bmpH = 10;
+    BitmapFramebuffer bfb(bmpW, bmpH);
     float worldProjMat[] = {
-        2.0f,  0.0f, -1.0f,
-        0.0f, -2.0f,  1.0f,
+        2.0f/bmpW,  0.0f, -1.0f,
+        0.0f, -2.0f/bmpH,  1.0f,
         0.0f,  0.0f,  0.0f
     };
-
-    unsigned int vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    unsigned int vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, verts.size()*sizeof(unsigned int), &verts[0], GL_STATIC_DRAW);
-
-    unsigned int ibo;
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(unsigned int), indices, GL_STATIC_DRAW);
-
-    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, 0);
-    glEnableVertexAttribArray(0);
-
     const char* relPath = "res/shaders";
     std::vector<ShaderPair> pairs = linkShaders(relPath);
     std::vector<unsigned int> shaderIds = compileShaders(pairs);
@@ -147,10 +104,7 @@ int main(int argc, char **argv) {
         // Clear main screen
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        // Render quad
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        bfb.render();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

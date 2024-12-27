@@ -8,6 +8,7 @@ set (CMAKE_CXX_STANDARD 20)
 set(SOURCES
     src/main.cpp
 
+    src/bitmap_fb.cpp
     src/gl_helpers.cpp
     src/shader.cpp
     src/shader_linker.cpp
