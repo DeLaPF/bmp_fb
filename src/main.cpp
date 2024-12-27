@@ -8,6 +8,7 @@
 
 #include "bitmap_fb.hpp"
 #include "imgui_gl.hpp"
+#include "resizable_target.hpp"
 #include "sdl_gl.hpp"
 #include "shader_linker.hpp"
 
@@ -29,8 +30,10 @@ int main(int argc, char **argv) {
     SDL_GLContext glContext = initSDLGLContext(window).value();
     initImguiGL(window, glContext);
 
-    int w, h;
-    SDL_GetWindowSize(window, &w, &h);
+    int w = 400;
+    int h = 400;
+    ResizeableTarget imguiTarget(w, h);
+
     unsigned int bmpW = 11;
     unsigned int bmpH = 11;
     BitmapFramebuffer bfb(bmpW, bmpH);
@@ -77,8 +80,6 @@ int main(int argc, char **argv) {
                     int w, h;
                     SDL_GetWindowSize(window, &w, &h);
                     glViewport(0, 0, w, h);
-                    mvm = modelViewMatrix(w, h, bmpW, bmpH);
-                    glUniformMatrix3fv(uMVM, 1, GL_TRUE, &mvm[0]);
                 }
             }
         }
@@ -88,8 +89,32 @@ int main(int argc, char **argv) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        imguiTarget.bind();
+        ImGui::Begin("Display");
+        int newW = (int)ImGui::GetContentRegionAvail().x;
+        int newH = (int)ImGui::GetContentRegionAvail().y;
+        if (newW != w || newH != h) {
+            imguiTarget.resize(newW, newH);
+            w = newW;
+            h = newH;
+            mvm = modelViewMatrix(w, h, bmpW, bmpH);
+            glUniformMatrix3fv(uMVM, 1, GL_TRUE, &mvm[0]);
+            glViewport(0, 0, w, h);
+        }
+
         // render bitmap fb
         bfb.render();
+
+        ImVec2 guiPos = ImGui::GetCursorScreenPos();
+        ImGui::GetWindowDrawList()->AddImage(
+            imguiTarget.getTextureId(),
+            ImVec2(guiPos.x, guiPos.y),
+            ImVec2(guiPos.x + w, guiPos.y + h),
+            ImVec2(0, 1),
+            ImVec2(1, 0)
+        );
+        ImGui::End();
+        imguiTarget.unbind();
 
         renderImguiFrame();
         SDL_GL_SwapWindow(window);
