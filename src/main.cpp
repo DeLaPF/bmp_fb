@@ -1,3 +1,4 @@
+#include <array>
 #include <iostream>
 #include <format>
 
@@ -12,6 +13,20 @@
 #include "gl_helpers.hpp"
 #include "shader_linker.hpp"
 
+
+std::array<float, 9> modelViewMatrix(int w, int h, int mW, int mH)
+{
+    float aspRW = w >= h ? ((float)w)/h : 1.0f;
+    float aspRH = w >= h ? 1.0f : ((float)h)/w;
+    float transW = -1.0f + (w >= h ? (w-h)/((float)w) : 0.0f);
+    float transH =  1.0f + (w >= h ? 0.0f : (w-h)/((float)h));
+    return {
+        2.0f/(mW*aspRW), 0.0f, transW,
+        0.0f, -2.0f/(mH*aspRH), transH,
+        0.0f, 0.0f, 0.0f
+    };
+}
+
 int main(int argc, char **argv) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -25,7 +40,7 @@ int main(int argc, char **argv) {
         "OpenGL with SDL",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         800, 600,
-        SDL_WINDOW_OPENGL // | SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
     SDL_GLContext glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
@@ -44,22 +59,18 @@ int main(int argc, char **argv) {
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
     ImGui_ImplSDL2_InitForOpenGL(window, glContext);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    ImGui_ImplOpenGL3_Init("#version 450");
 
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
     unsigned int bmpW = 11;
     unsigned int bmpH = 11;
     BitmapFramebuffer bfb(bmpW, bmpH);
     auto bitmap = bfb.getBitmap();
-    for (auto i = 0; i < bitmap->size(); i++) { bitmap->at(i) = i%2 == 0 ? 0xFFFFFF : 0; }
+    for (auto i = 0; i < bitmap->size(); i++) { bitmap->at(i) = i%2 == 0 ? 0x1F7AC4 : 0; }
     bfb.updateBitmap();
+    std::array<float, 9> mvm = modelViewMatrix(w, h, bmpW, bmpH);
 
-    int w, h;
-    SDL_GetWindowSize(window, &w, &h);
-    float worldProjMat[] = {
-        2.0f/bmpW,  0.0f, -1.0f,
-        0.0f, -2.0f/bmpH,  1.0f,
-        0.0f,  0.0f,  0.0f
-    };
     const char* relPath = "res/shaders";
     std::vector<ShaderPair> pairs = linkShaders(relPath);
     std::vector<unsigned int> shaderIds = compileShaders(pairs);
@@ -74,11 +85,10 @@ int main(int argc, char **argv) {
     glUseProgram(shader);
     int uRes = glGetUniformLocation(shader, "u_Res");
     int uBitmapDim = glGetUniformLocation(shader, "u_BitmapDim");
-    int uWorldProj = glGetUniformLocation(shader, "u_WorldProj");
+    int uMVM = glGetUniformLocation(shader, "u_ModelViewMat");
     glUniform2i(uRes, w, h);
     glUniform2i(uBitmapDim, bmpW, bmpH);
-    glUniformMatrix3fv(uWorldProj, 1, GL_TRUE, worldProjMat);
-
+    glUniformMatrix3fv(uMVM, 1, GL_TRUE, &mvm[0]);
 
     // Main loop
     bool running = true;
@@ -98,6 +108,8 @@ int main(int argc, char **argv) {
                     int w, h;
                     SDL_GetWindowSize(window, &w, &h);
                     glViewport(0, 0, w, h);
+                    mvm = modelViewMatrix(w, h, bmpW, bmpH);
+                    glUniformMatrix3fv(uMVM, 1, GL_TRUE, &mvm[0]);
                 }
             }
         }
