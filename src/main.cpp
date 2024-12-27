@@ -2,17 +2,14 @@
 #include <iostream>
 #include <format>
 
-#include "bitmap_fb.hpp"
 #include "glad/gl.h"
-#include "imgui.h"
 #include "imgui_impl_sdl2.h"
-#include "imgui_impl_opengl3.h"
 #include "SDL.h"
-#include "SDL_video.h"
 
-#include "gl_helpers.hpp"
+#include "bitmap_fb.hpp"
+#include "imgui_gl.hpp"
+#include "sdl_gl.hpp"
 #include "shader_linker.hpp"
-
 
 std::array<float, 9> modelViewMatrix(int w, int h, int mW, int mH)
 {
@@ -28,38 +25,9 @@ std::array<float, 9> modelViewMatrix(int w, int h, int mW, int mH)
 }
 
 int main(int argc, char **argv) {
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        SDL_Log("SDL initialization failed: %s", SDL_GetError());
-        return 1;
-    }
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-
-    // Create window with OpenGL context
-    SDL_Window* window = SDL_CreateWindow(
-        "OpenGL with SDL",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        800, 600,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
-    );
-    SDL_GLContext glContext = SDL_GL_CreateContext(window);
-    if (!glContext) {
-        SDL_Log("OpenGL context creation failed: %s", SDL_GetError());
-        return 1;
-    }
-    int version = gladLoadGL((GLADloadfunc) SDL_GL_GetProcAddress);
-    std::cout << std::format(
-        "GL {}.{}\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version)
-    ) << std::endl;
-    glDebugMessageCallback(handleGLError, 0);
-
-    // Setup Dear ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForOpenGL(window, glContext);
-    ImGui_ImplOpenGL3_Init("#version 450");
+    SDL_Window* window = initSDLGLWindow(800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE).value();
+    SDL_GLContext glContext = initSDLGLContext(window).value();
+    initImguiGL(window, glContext);
 
     int w, h;
     SDL_GetWindowSize(window, &w, &h);
@@ -83,6 +51,7 @@ int main(int argc, char **argv) {
     }
     unsigned int shader = shaderIds[0];
     glUseProgram(shader);
+
     int uRes = glGetUniformLocation(shader, "u_Res");
     int uBitmapDim = glGetUniformLocation(shader, "u_BitmapDim");
     int uMVM = glGetUniformLocation(shader, "u_ModelViewMat");
@@ -113,38 +82,28 @@ int main(int argc, char **argv) {
                 }
             }
         }
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
+        newImguiFrame();
 
         // Clear main screen
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // render bitmap fb
         bfb.render();
 
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // Swap buffers to display the rendered image
+        renderImguiFrame();
         SDL_GL_SwapWindow(window);
     }
 
-    // gl cleanup
+    // shader cleanup
     for (int i = 0; i < shaderIds.size(); i++) {
         if (shaderIds[i] != -1) {
             glDeleteProgram(shaderIds[i]);
         }
     }
 
-    // ImGui Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
-
-    // SDL Cleanup
-    SDL_GL_DeleteContext(glContext);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    destroyImguiGL();
+    destroySDLGL(window, glContext);
 
     return 0;
 }

@@ -10,6 +10,8 @@ set(SOURCES
 
     src/bitmap_fb.cpp
     src/gl_helpers.cpp
+    src/imgui_gl.cpp
+    src/sdl_gl.cpp
     src/shader.cpp
     src/shader_linker.cpp
 )
