@@ -30,6 +30,8 @@ int main(int argc, char **argv) {
     SDL_GLContext glContext = initSDLGLContext(window).value();
     initImguiGL(window, glContext);
 
+    // TODO: in essence all of this only renders a bimap to an imgui window
+    // how can I best decrease the current verbosity?
     int w = 400;
     int h = 400;
     ResizeableTarget imguiTarget(w, h);
@@ -65,6 +67,7 @@ int main(int argc, char **argv) {
     // Main loop
     bool running = true;
     while (running) {
+        // TODO: how to handle outside of main without losing flexibility?
         // Handle events
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -89,6 +92,7 @@ int main(int argc, char **argv) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // TODO: how to provide default dimensions (and style)?
         imguiTarget.bind();
         ImGui::Begin("Display");
         int newW = (int)ImGui::GetContentRegionAvail().x;
