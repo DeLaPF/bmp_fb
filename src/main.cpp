@@ -8,12 +8,7 @@
 
 void app(SDL_Window* window)
 {
-    // TODO: update to bitmapDim and renderDim
-    unsigned int bmpW = 11;
-    unsigned int bmpH = 11;
-    int fbW = 400;
-    int fbH = 400;
-    BitmapFramebuffer bfb(bmpW, bmpH, fbW, fbH);
+    BitmapFramebuffer bfb(11, 11, 400, 400);
     TextureWindow bfbDisp("Display", bfb.getTextureId());
 
     // Draw pattern on bitmap
@@ -52,7 +47,7 @@ void app(SDL_Window* window)
         glClear(GL_COLOR_BUFFER_BIT);
 
         bfbDisp.drawWindow();
-        if (bfbDisp.didResize()) { bfb.resizeFb(bfbDisp.width(), bfbDisp.height()); }
+        if (bfbDisp.didResize()) { bfb.resizeRenderDim(bfbDisp.width(), bfbDisp.height()); }
         bfb.render();
 
         renderImguiFrame();

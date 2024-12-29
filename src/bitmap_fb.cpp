@@ -23,7 +23,7 @@ static void createTextureFb(int w, int h, int texId, unsigned int rbo)
     }
 }
 
-BitmapFramebuffer::BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int fbW, int fbH)
+BitmapFramebuffer::BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int renderW, int renderH)
 {
     const unsigned int vertsPerQuad = 4;
     const unsigned int indsPerQuad = 6;
@@ -87,15 +87,15 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int f
     glNamedBufferStorage(this->m_ssboColor, this->m_bitmap->size()*sizeof(unsigned int), (const void *)0, GL_DYNAMIC_STORAGE_BIT);
 
     // Framebuffer setup
-    this->m_fbW = fbW;
-    this->m_fbH = fbH;
+    this->m_renderW = renderW;
+    this->m_renderH = renderH;
     glGenFramebuffers(1, &this->m_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
     glGenTextures(1, &this->m_textureId);
     glBindTexture(GL_TEXTURE_2D, this->m_textureId);
     glGenRenderbuffers(1, &this->m_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, this->m_rbo);
-    createTextureFb(this->m_fbW, this->m_fbH, this->m_textureId, this->m_rbo);
+    createTextureFb(this->m_renderW, this->m_renderH, this->m_textureId, this->m_rbo);
 
     // Framebuffer unbind
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -139,15 +139,18 @@ unsigned int BitmapFramebuffer::getTextureId()
     return this->m_textureId;
 }
 
-void BitmapFramebuffer::render()
+void BitmapFramebuffer::render(bool toFb)
 {
-    this->bind();
+    this->bindBase();
+    if (toFb) {
+        this->bindFb();
+    }
 
-    glUniform2i(this->m_uFbRes, this->m_fbW, this->m_fbH);
+    glUniform2i(this->m_uFbRes, this->m_renderW, this->m_renderH);
     glUniform2i(this->m_uBitmapDim, this->m_bmpW, this->m_bmpH);
     glUniformMatrix3fv(this->m_uMVM, 1, GL_TRUE, &this->m_mvm[0]);
 
-    glViewport(0, 0, this->m_fbW, this->m_fbH);
+    glViewport(0, 0, this->m_renderW, this->m_renderH);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawElements(GL_TRIANGLES, (unsigned int)this->m_indices.size(), GL_UNSIGNED_INT, nullptr);
@@ -155,14 +158,14 @@ void BitmapFramebuffer::render()
     this->unbind();
 }
 
-void BitmapFramebuffer::resizeFb(int fbW, int fbH)
+void BitmapFramebuffer::resizeRenderDim(int w, int h)
 {
     this->bind();
 
-    this->m_fbW = fbW;
-    this->m_fbH = fbH;
+    this->m_renderW = w;
+    this->m_renderH = h;
     this->updateModelViewMatrix();
-    createTextureFb(this->m_fbW, this->m_fbH, this->m_textureId, this->m_rbo);
+    createTextureFb(this->m_renderW, this->m_renderH, this->m_textureId, this->m_rbo);
 
     this->unbind();
 }
@@ -176,8 +179,8 @@ void BitmapFramebuffer::updateBitmap()
 
 void BitmapFramebuffer::updateModelViewMatrix()
 {
-    int w = this->m_fbW;
-    int h = this->m_fbH;
+    int w = this->m_renderW;
+    int h = this->m_renderH;
     unsigned int mW = this->m_bmpW;
     unsigned int mH = this->m_bmpH;
 
@@ -195,34 +198,52 @@ void BitmapFramebuffer::updateModelViewMatrix()
 
 void BitmapFramebuffer::bind()
 {
+    this->bindBase();
+    this->bindFb();
+}
+
+void BitmapFramebuffer::unbind()
+{
+    this->unbindBase();
+    this->unbindFb();
+}
+
+void BitmapFramebuffer::bindBase()
+{
     // Bitmap (vertices/indices and color)
     glBindVertexArray(this->m_vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_ibo);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->m_ssboColor);
 
-    // Framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
-    glBindTexture(GL_TEXTURE_2D, this->m_textureId);
-    glBindRenderbuffer(GL_RENDERBUFFER, this->m_rbo);
-
     // Shader
     glUseProgram(this->m_shaderPg);
 }
 
-void BitmapFramebuffer::unbind()
+void BitmapFramebuffer::unbindBase()
 {
     // Bitmap (vertices/indices and color)
     glBindVertexArray(0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
 
+    // Shader
+    glUseProgram(0);
+}
+
+void BitmapFramebuffer::bindFb()
+{
+    // Framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
+    glBindTexture(GL_TEXTURE_2D, this->m_textureId);
+    glBindRenderbuffer(GL_RENDERBUFFER, this->m_rbo);
+}
+
+void BitmapFramebuffer::unbindFb()
+{
     // Framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    // Shader
-    glUseProgram(0);
 }
 
 // NOTE: must stay aligned with shader code
