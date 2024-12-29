@@ -1,5 +1,4 @@
 #include "glad/gl.h"
-#include "imgui_impl_sdl2.h"
 #include "SDL.h"
 
 #include "bitmap_fb.hpp"
@@ -8,6 +7,7 @@
 
 void app(SDL_Window* window)
 {
+    SDLEventHandler eH(window);
     BitmapFramebuffer bfb(11, 11, 400, 400);
     TextureWindow bfbDisp("Display", bfb.getTextureId());
 
@@ -16,33 +16,13 @@ void app(SDL_Window* window)
     for (auto i = 0; i < bitmap->size(); i++) { bitmap->at(i) = i%2 == 0 ? 0x1F7AC4 : 0; }
     bfb.updateBitmap();
 
-    int wW, wH;
-    SDL_GetWindowSize(window, &wW, &wH);
-
     // Main loop
-    bool running = true;
-    while (running) {
-        // TODO: how to handle outside of main without losing flexibility?
-        // Handle events
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            // Forward to Imgui
-            ImGui_ImplSDL2_ProcessEvent(&event);
-            if (event.type == SDL_QUIT
-                || (event.type == SDL_WINDOWEVENT
-                && event.window.event == SDL_WINDOWEVENT_CLOSE
-                && event.window.windowID == SDL_GetWindowID(window))) {
-                running = false;
-            } else if (event.type == SDL_WINDOWEVENT) {
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    SDL_GetWindowSize(window, &wW, &wH);
-                }
-            }
-        }
+    while (!eH.windowShouldClose()) {
+        eH.handleEvents();
         newImguiFrame();
 
         // Clear main screen
-        glViewport(0, 0, wW, wH);
+        glViewport(0, 0, eH.windowW(), eH.windowH());
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 

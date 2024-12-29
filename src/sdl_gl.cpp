@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "glad/gl.h"
+#include "imgui_impl_sdl2.h"
 
 static void handleGLError(
     GLenum source,
@@ -68,4 +69,30 @@ void destroySDLGL(SDL_Window* window, SDL_GLContext glContext)
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+SDLEventHandler::SDLEventHandler(SDL_Window* window)
+{
+    this->m_window = window;
+    SDL_GetWindowSize(this->m_window, &this->m_windowW, &this->m_windowH);
+    this->m_windowShouldClose = false;
+}
+
+void SDLEventHandler::handleEvents()
+{
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        // Forward to Imgui
+        ImGui_ImplSDL2_ProcessEvent(&event);
+        if (event.type == SDL_QUIT
+            || (event.type == SDL_WINDOWEVENT
+            && event.window.event == SDL_WINDOWEVENT_CLOSE
+            && event.window.windowID == SDL_GetWindowID(this->m_window))) {
+            this->m_windowShouldClose = true;
+        } else if (event.type == SDL_WINDOWEVENT) {
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                SDL_GetWindowSize(this->m_window, &this->m_windowW, &this->m_windowH);
+            }
+        }
+    }
 }
