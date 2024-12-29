@@ -16,7 +16,11 @@ typedef std::vector<unsigned int> Bitmap;
 
 class BitmapFramebuffer {
 public:
-    BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int renderW, int renderH);
+    BitmapFramebuffer(
+        unsigned int bmpW, unsigned int bmpH,
+        int renderW, int renderH,
+        int minRW = 16, int minRH = 16
+    );
     ~BitmapFramebuffer();
 
     std::shared_ptr<Bitmap> getBitmap();
@@ -48,6 +52,8 @@ private:
 
     int m_renderW;
     int m_renderH;
+    int m_minRW;
+    int m_minRH;
     unsigned int m_fbo;
     unsigned int m_rbo;
     unsigned int m_textureId;

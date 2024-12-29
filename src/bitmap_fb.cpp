@@ -1,5 +1,6 @@
 #include "bitmap_fb.hpp"
 
+#include <algorithm>
 #include <format>
 #include <iostream>
 
@@ -23,7 +24,11 @@ static void createTextureFb(int w, int h, int texId, unsigned int rbo)
     }
 }
 
-BitmapFramebuffer::BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int renderW, int renderH)
+BitmapFramebuffer::BitmapFramebuffer(
+    unsigned int bmpW, unsigned int bmpH,
+    int renderW, int renderH,
+    int minRW, int minRH
+)
 {
     const unsigned int vertsPerQuad = 4;
     const unsigned int indsPerQuad = 6;
@@ -89,6 +94,8 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int r
     // Framebuffer setup
     this->m_renderW = renderW;
     this->m_renderH = renderH;
+    this->m_minRW = minRW;
+    this->m_minRH = minRH;
     glGenFramebuffers(1, &this->m_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
     glGenTextures(1, &this->m_textureId);
@@ -162,8 +169,8 @@ void BitmapFramebuffer::resizeRenderDim(int w, int h)
 {
     this->bind();
 
-    this->m_renderW = w;
-    this->m_renderH = h;
+    this->m_renderW = std::max(w, this->m_minRW);
+    this->m_renderH = std::max(h, this->m_minRH);
     this->updateModelViewMatrix();
     createTextureFb(this->m_renderW, this->m_renderH, this->m_textureId, this->m_rbo);
 
