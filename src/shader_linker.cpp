@@ -5,7 +5,7 @@
 #include <format>
 #include <iostream>
 
-#include "shader.hpp"
+#include "shader_compiler.hpp"
 
 std::vector<ShaderPair> linkShaders(const char* shaderDir, const std::vector<std::string>* names)
 {

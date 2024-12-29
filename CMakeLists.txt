@@ -9,10 +9,9 @@ set(SOURCES
     src/main.cpp
 
     src/bitmap_fb.cpp
-    src/gl_helpers.cpp
     src/imgui_gl.cpp
     src/sdl_gl.cpp
-    src/shader.cpp
+    src/shader_compiler.cpp
     src/shader_linker.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCES})
