@@ -1,14 +1,17 @@
 #include "bitmap_fb.hpp"
 
+#include <format>
 #include <iostream>
 
 #include "glad/gl.h"
 
-BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
+#include "shader_linker.hpp"
+
+BitmapFramebuffer::BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int fbW, int fbH)
 {
     const unsigned int vertsPerQuad = 4;
     const unsigned int indsPerQuad = 6;
-    unsigned int totalPixels = width*height;
+    unsigned int totalPixels = bmpW*bmpH;
 
     this->m_vertices.reserve(totalPixels*vertsPerQuad);
     this->m_indices.reserve(totalPixels*indsPerQuad);
@@ -17,10 +20,10 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
     this->m_bitmap->reserve(totalPixels);
     for (unsigned int i = 0; i < totalPixels; i++) { this->m_bitmap->push_back(0); }
 
-    this->width = width;
-    this->height = height;
-    for (unsigned int y = 0; y < height; y++) {
-        for (unsigned int x = 0; x < width; x++) {
+    this->m_bmpW = bmpW;
+    this->m_bmpH = bmpH;
+    for (unsigned int y = 0; y < bmpH; y++) {
+        for (unsigned int x = 0; x < bmpW; x++) {
             // Add vertices
             this->m_vertices.push_back(packVertex({x+0, y+1, 0, 1}));
             this->m_vertices.push_back(packVertex({x+1, y+1, 1, 1}));
@@ -28,7 +31,7 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
             this->m_vertices.push_back(packVertex({x+0, y+0, 0, 0}));
 
             // Add indices
-            unsigned int indOff = (y*width + x)*vertsPerQuad;
+            unsigned int indOff = (y*bmpW + x)*vertsPerQuad;
             this->m_indices.push_back(0+indOff);
             this->m_indices.push_back(1+indOff);
             this->m_indices.push_back(2+indOff);
@@ -38,21 +41,13 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
         }
     }
 
+    // Vertex data setup
     glGenVertexArrays(1, &this->m_vao);
     glBindVertexArray(this->m_vao);
 
     glGenBuffers(1, &this->m_vboVertex);
     glBindBuffer(GL_ARRAY_BUFFER, this->m_vboVertex);
     glBufferData(GL_ARRAY_BUFFER, this->m_vertices.size()*sizeof(unsigned int), &this->m_vertices[0], GL_STATIC_DRAW);
-
-    glCreateBuffers(1, &this->m_ssboColor);
-    // TODO: offer options for:
-    //  - binary colors: 8 pixels per byte
-    //  - rgba: 1 byte per channel
-    //  - (maybe should just be rgb since I don't think will be stacked?)
-    glNamedBufferStorage(this->m_ssboColor, this->m_bitmap->size()*sizeof(unsigned int), (const void *)0, GL_DYNAMIC_STORAGE_BIT);
-    // color ssbo
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->m_ssboColor);
 
     glGenBuffers(1, &this->m_ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_ibo);
@@ -61,10 +56,73 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int width, unsigned int height)
     // uint32 packed vertices
     glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, 0);
     glEnableVertexAttribArray(0);
+
+    // Vertex data unbind
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    // Dynamic Color ssbo setup
+    glCreateBuffers(1, &this->m_ssboColor);
+    // TODO: offer options for:
+    //  - binary colors: 8 pixels per byte
+    //  - rgba: 1 byte per channel
+    //  - (maybe should just be rgb since I don't think will be stacked?)
+    glNamedBufferStorage(this->m_ssboColor, this->m_bitmap->size()*sizeof(unsigned int), (const void *)0, GL_DYNAMIC_STORAGE_BIT);
+
+    // Framebuffer setup
+    this->m_fbW = fbW;
+    this->m_fbH = fbH;
+    glGenFramebuffers(1, &this->m_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
+
+    glGenTextures(1, &this->m_textureId);
+    glBindTexture(GL_TEXTURE_2D, this->m_textureId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fbW, fbH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->m_textureId, 0);
+
+    glGenRenderbuffers(1, &this->m_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, this->m_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fbW, fbH);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this->m_rbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "ERROR [FRAMEBUFFER]: Framebuffer is not complete!" << std::endl;
+        exit(1);
+    }
+
+    // Framebuffer unbind
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    // Shader setup
+    const char* relPath = "res/shaders";
+    const std::vector<std::string> names = { "bmp_fb" };
+    std::vector<ShaderPair> pairs = linkShaders(relPath, &names);
+    std::vector<unsigned int> shaderIds = compileShaders(pairs);
+    if (shaderIds.size() < 1) {
+        std::cout << std::format(
+            "ERROR [Shaders]: no valid shaders found at: {}",
+            relPath
+        ) << std::endl;
+        exit(1);
+    }
+    this->m_shaderPg = shaderIds[0];
+    glUseProgram(this->m_shaderPg);
+    this->m_uFbRes = glGetUniformLocation(this->m_shaderPg, "u_Res");
+    this->m_uBitmapDim = glGetUniformLocation(this->m_shaderPg, "u_BitmapDim");
+    this->m_uMVM = glGetUniformLocation(this->m_shaderPg, "u_ModelViewMat");
+
+    // Shader unbind
+    glUseProgram(0);
 }
 
 BitmapFramebuffer::~BitmapFramebuffer()
 {
+    glDeleteProgram(this->m_shaderPg);
 }
 
 std::shared_ptr<Bitmap> BitmapFramebuffer::getBitmap()
@@ -72,23 +130,103 @@ std::shared_ptr<Bitmap> BitmapFramebuffer::getBitmap()
     return this->m_bitmap;
 }
 
-void BitmapFramebuffer::updateBitmap()
+unsigned int BitmapFramebuffer::getTextureId()
 {
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->m_ssboColor);
-    // glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->m_bitmap->size()*sizeof(unsigned int), &((*this->m_bitmap)[0]));
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->m_bitmap->size()*sizeof(unsigned int), &this->m_bitmap->at(0));
+    return this->m_textureId;
 }
 
 void BitmapFramebuffer::render()
 {
-    // clear current target
+    this->bind();
+
+    glUniform2i(this->m_uFbRes, this->m_fbW, this->m_fbH);
+    glUniform2i(this->m_uBitmapDim, this->m_bmpW, this->m_bmpH);
+    glUniformMatrix3fv(this->m_uMVM, 1, GL_TRUE, &this->m_mvm[0]);
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+    glDrawElements(GL_TRIANGLES, (unsigned int)this->m_indices.size(), GL_UNSIGNED_INT, nullptr);
 
-    // Render quads to current target
+    this->unbind();
+}
+
+void BitmapFramebuffer::resizeFb(int fbW, int fbH)
+{
+    this->bind();
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fbW, fbH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->m_textureId, 0);
+
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fbW, fbH);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this->m_rbo);
+
+    glViewport(0, 0, fbW, fbH);
+
+    this->m_fbW = fbW;
+    this->m_fbH = fbH;
+    this->updateModelViewMatrix();
+
+    this->unbind();
+}
+
+void BitmapFramebuffer::updateBitmap()
+{
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->m_ssboColor);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->m_bitmap->size()*sizeof(unsigned int), &this->m_bitmap->at(0));
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+}
+
+void BitmapFramebuffer::updateModelViewMatrix()
+{
+    int w = this->m_fbW;
+    int h = this->m_fbH;
+    unsigned int mW = this->m_bmpW;
+    unsigned int mH = this->m_bmpH;
+
+    float aspRW = w >= h ? ((float)w)/h : 1.0f;
+    float aspRH = w >= h ? 1.0f : ((float)h)/w;
+    float transW = -1.0f + (w >= h ? (w-h)/((float)w) : 0.0f);
+    float transH =  1.0f + (w >= h ? 0.0f : (w-h)/((float)h));
+
+    this->m_mvm = {
+        2.0f/(mW*aspRW), 0.0f, transW,
+        0.0f, -2.0f/(mH*aspRH), transH,
+        0.0f, 0.0f, 0.0f
+    };
+}
+
+void BitmapFramebuffer::bind()
+{
+    // Bitmap (vertices/indices and color)
     glBindVertexArray(this->m_vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_ibo);
-    glDrawElements(GL_TRIANGLES, (unsigned int)this->m_indices.size(), GL_UNSIGNED_INT, nullptr);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->m_ssboColor);
+
+    // Framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
+    glBindTexture(GL_TEXTURE_2D, this->m_textureId);
+    glBindRenderbuffer(GL_RENDERBUFFER, this->m_rbo);
+
+    // Shader
+    glUseProgram(this->m_shaderPg);
+}
+
+void BitmapFramebuffer::unbind()
+{
+    // Bitmap (vertices/indices and color)
+    glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+
+    // Framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    // Shader
+    glUseProgram(0);
 }
 
 // NOTE: must stay aligned with shader code
