@@ -7,6 +7,22 @@
 
 #include "shader_linker.hpp"
 
+// Note: expects required gl objects to be bound
+static void createTextureFb(int w, int h, int texId, unsigned int rbo)
+{
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texId, 0);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "ERROR [FRAMEBUFFER]: Framebuffer is not complete!" << std::endl;
+        exit(1);
+    }
+}
+
 BitmapFramebuffer::BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int fbW, int fbH)
 {
     const unsigned int vertsPerQuad = 4;
@@ -75,23 +91,11 @@ BitmapFramebuffer::BitmapFramebuffer(unsigned int bmpW, unsigned int bmpH, int f
     this->m_fbH = fbH;
     glGenFramebuffers(1, &this->m_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
-
     glGenTextures(1, &this->m_textureId);
     glBindTexture(GL_TEXTURE_2D, this->m_textureId);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fbW, fbH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->m_textureId, 0);
-
     glGenRenderbuffers(1, &this->m_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, this->m_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fbW, fbH);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this->m_rbo);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "ERROR [FRAMEBUFFER]: Framebuffer is not complete!" << std::endl;
-        exit(1);
-    }
+    createTextureFb(this->m_fbW, this->m_fbH, this->m_textureId, this->m_rbo);
 
     // Framebuffer unbind
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -143,6 +147,7 @@ void BitmapFramebuffer::render()
     glUniform2i(this->m_uBitmapDim, this->m_bmpW, this->m_bmpH);
     glUniformMatrix3fv(this->m_uMVM, 1, GL_TRUE, &this->m_mvm[0]);
 
+    glViewport(0, 0, this->m_fbW, this->m_fbH);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawElements(GL_TRIANGLES, (unsigned int)this->m_indices.size(), GL_UNSIGNED_INT, nullptr);
@@ -154,19 +159,10 @@ void BitmapFramebuffer::resizeFb(int fbW, int fbH)
 {
     this->bind();
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fbW, fbH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->m_textureId, 0);
-
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, fbW, fbH);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this->m_rbo);
-
-    glViewport(0, 0, fbW, fbH);
-
     this->m_fbW = fbW;
     this->m_fbH = fbH;
     this->updateModelViewMatrix();
+    createTextureFb(this->m_fbW, this->m_fbH, this->m_textureId, this->m_rbo);
 
     this->unbind();
 }
