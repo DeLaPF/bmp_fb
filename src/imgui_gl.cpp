@@ -45,8 +45,8 @@ TextureWindow::TextureWindow(std::string name, int textureId, unsigned int width
 
 void TextureWindow::drawWindow()
 {
-    // TODO: how to provide default dimensions (and style)?
-    ImGui::Begin(this->m_name.c_str());
+    ImGui::Begin(this->m_name.c_str(), NULL, ImGuiWindowFlags_NoTitleBar);
+    ImGui::SetWindowSize(ImVec2((float)this->m_width, (float)this->m_height), ImGuiCond_FirstUseEver);
     ImVec2 guiPos = ImGui::GetCursorScreenPos();
     ImVec2 guiDim = ImGui::GetContentRegionAvail();
     this->m_didResize = (int)guiDim.x != this->m_width || (int)guiDim.y != this->m_height;
