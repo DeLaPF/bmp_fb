@@ -14,6 +14,7 @@ void app(SDL_Window* window)
     int fbW = 400;
     int fbH = 400;
     BitmapFramebuffer bfb(bmpW, bmpH, fbW, fbH);
+    TextureWindow bfbDisp("Display", bfb.getTextureId());
 
     // Draw pattern on bitmap
     auto bitmap = bfb.getBitmap();
@@ -50,34 +51,8 @@ void app(SDL_Window* window)
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // TODO: how to provide default dimensions (and style)?
-        ImGui::Begin("Display");
-        ImVec2 guiPos = ImGui::GetCursorScreenPos();
-        ImVec2 guiDim = ImGui::GetContentRegionAvail();
-        if ((int)guiDim.x != fbW || (int)guiDim.y != fbH) {
-            bfb.resizeFb((int)guiDim.x, (int)guiDim.y);
-            fbW = (int)guiDim.x;
-            fbH = (int)guiDim.y;
-        }
-
-        // TODO (determine): does `AddImage` use data at texId immediately
-        // or save reference and wait for `render`?
-        // if immediate, will draw black frame on resize, due to texture reinit
-        ImGui::GetWindowDrawList()->AddImage(
-            bfb.getTextureId(),
-            ImVec2(guiPos.x, guiPos.y),
-            ImVec2(guiPos.x + guiDim.x, guiPos.y + guiDim.y),
-            ImVec2(0, 1),
-            ImVec2(1, 0)
-        );
-        ImGui::End();
-
-        // render bitmap fb
-        // Note: moving this outside of the display will cause resize to be one frame behind
-        // which causes some minor flashing
-        // unless put after, then the frame (may be, not actually sure yet) one fram behind
-        // this depends on if `AddImage` immediately uses the data referenced by textureId (behind)
-        // or if it waits for `Imgui::render()` before it pulls the texture data (in sync)
+        bfbDisp.drawWindow();
+        if (bfbDisp.didResize()) { bfb.resizeFb(bfbDisp.width(), bfbDisp.height()); }
         bfb.render();
 
         renderImguiFrame();
