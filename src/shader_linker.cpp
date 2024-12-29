@@ -7,7 +7,7 @@
 
 #include "shader.hpp"
 
-std::vector<ShaderPair> linkShaders(const char* shaderDir)
+std::vector<ShaderPair> linkShaders(const char* shaderDir, const std::vector<std::string>* names)
 {
     std::vector<ShaderPair> pairs;
     std::vector<std::filesystem::path> shaderFiles;
@@ -28,7 +28,9 @@ std::vector<ShaderPair> linkShaders(const char* shaderDir)
                         defaultFragPath = (root / "default.frag.glsl").string();
                     }
                 } else {
-                    shaderFiles.push_back(entry.path());
+                    if (names == nullptr || find(names->begin(), names->end(), stem) != names->end()) {
+                        shaderFiles.push_back(entry.path());
+                    }
                 }
             }
         }

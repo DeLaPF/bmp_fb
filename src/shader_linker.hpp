@@ -10,5 +10,5 @@ struct ShaderPair {
     bool isCombined;
 };
 
-std::vector<ShaderPair> linkShaders(const char* shaderDir);
+std::vector<ShaderPair> linkShaders(const char* shaderDir, const std::vector<std::string>* names = nullptr);
 std::vector<unsigned int> compileShaders(const std::vector<ShaderPair>& shaderPairs);
