@@ -55,9 +55,6 @@ void TextureWindow::drawWindow()
         this->m_height = (int)guiDim.y;
     }
 
-    // TODO (determine): does `AddImage` use data at texId immediately
-    // or save reference and wait for `render`?
-    // if immediate, will draw black frame on resize, due to texture reinit
     ImGui::GetWindowDrawList()->AddImage(
         this->m_textureId,
         ImVec2(guiPos.x, guiPos.y),
