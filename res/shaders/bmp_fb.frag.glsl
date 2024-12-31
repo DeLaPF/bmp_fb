@@ -1,6 +1,6 @@
 #version 450 core
 
-layout(binding = 0, std430) readonly buffer bmpData { // TODO: does the name matter?
+layout(std430, binding = 0) readonly buffer ssbo0 {
     uint bitmap[];
 };
 flat in uvec2 vBitmapCoord;
