@@ -75,7 +75,5 @@ unsigned int createShader(const std::string& vertexShader, const std::string& fr
     glDeleteShader(vs);
     glDeleteShader(fs);
 
-    // TODO: error handling
-
     return program;
 }
