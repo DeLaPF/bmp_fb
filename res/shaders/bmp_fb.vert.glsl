@@ -3,11 +3,9 @@
 layout(location = 0) in uint packedData;
 
 uniform mat3 u_ModelViewMat;
-uniform ivec2 u_BitmapDim;
-uniform ivec2 u_Res;
 
+out uvec2 vBitmapCoord;
 out vec2 vTexCoord;
-flat out uint vColorInd;
 
 const uint MASK_X = uint(0x0003FF);
 const uint MASK_Y = uint(0x0FFC00);
@@ -25,7 +23,7 @@ void main()
     vec2 projected = (u_ModelViewMat * hPos).xy;
     vec2 texCoord = vec2(float(s), float(t));
 
+    vBitmapCoord = uvec2(x-s, y-t);
     vTexCoord = texCoord;
-    vColorInd = (y-t)*u_BitmapDim.x + (x-s);
     gl_Position = vec4(projected.xy, 1.0, 1.0);
 }

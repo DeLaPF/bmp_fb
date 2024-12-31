@@ -10,15 +10,15 @@ void app(SDL_Window* window)
     SDLEventHandler eH(window);
     BitmapFramebuffer bfb0(11, 11, 400, 400);
     TextureWindow bfbDisp0("Display 0", bfb0.getTextureId());
-    BitmapFramebuffer bfb1(11, 11, 400, 400);
+    BitmapFramebuffer bfb1(11, 11, 400, 400, BitmapFramebuffer::SINGLE_BIT);
     TextureWindow bfbDisp1("Display 1", bfb1.getTextureId());
 
     // Draw pattern on bitmap(s)
     auto bitmap0 = bfb0.getBitmap();
-    for (auto i = 0; i < bitmap0->size(); i++) { bitmap0->at(i) = i%2 == 0 ? 0x1F7AC4 : 0; }
+    for (auto i = 0; i < bitmap0->size(); i++) { bitmap0->at(i) = i%2 == 0 ? 0x1F7AC4FF : 0; }
     bfb0.updateBitmap();
     auto bitmap1 = bfb1.getBitmap();
-    for (auto i = 0; i < bitmap1->size(); i++) { bitmap1->at(i) = i%3 == 0 ? 0x1F7AC4 : 0; }
+    for (auto i = 0; i < bitmap1->size(); i++) { bitmap1->at(i) = 0xAAAAAAAA; }
     bfb1.updateBitmap();
 
     // Main loop

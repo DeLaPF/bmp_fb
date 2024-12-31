@@ -26,20 +26,36 @@ static void createTextureFb(int w, int h, int texId, unsigned int rbo)
 
 BitmapFramebuffer::BitmapFramebuffer(
     unsigned int bmpW, unsigned int bmpH,
-    int renderW, int renderH,
+    int renderW, int renderH, unsigned int colorPackingFormat,
     int minRW, int minRH
 )
 {
     const unsigned int vertsPerQuad = 4;
     const unsigned int indsPerQuad = 6;
     unsigned int totalPixels = bmpW*bmpH;
+    unsigned int numPackedUint32;
+
+    this->m_colorPackingFormat = colorPackingFormat;
+    switch(colorPackingFormat) {
+    case RGBA:
+        numPackedUint32 = totalPixels;
+        break;
+    case SINGLE_BIT:
+        numPackedUint32 = (totalPixels / 32) + 1;
+        break;
+    default:
+        std::cout << std::format(
+            "Error[BITMAP_FB]: Invalid color packing format '{}'",
+            colorPackingFormat
+        ) << std::endl;
+        exit(1);
+    }
 
     this->m_vertices.reserve(totalPixels*vertsPerQuad);
     this->m_indices.reserve(totalPixels*indsPerQuad);
     this->m_bitmap = std::make_shared<Bitmap>();
-    // TODO: offer option for binary colors packed into bytes (8 pixels per byte)
-    this->m_bitmap->reserve(totalPixels);
-    for (unsigned int i = 0; i < totalPixels; i++) { this->m_bitmap->push_back(0); }
+    this->m_bitmap->reserve(numPackedUint32);
+    for (unsigned int i = 0; i < numPackedUint32; i++) { this->m_bitmap->push_back(0); }
 
     this->m_bmpW = bmpW;
     this->m_bmpH = bmpH;
@@ -85,10 +101,6 @@ BitmapFramebuffer::BitmapFramebuffer(
 
     // Dynamic Color ssbo setup
     glCreateBuffers(1, &this->m_ssboColor);
-    // TODO: offer options for:
-    //  - binary colors: 8 pixels per byte
-    //  - rgba: 1 byte per channel
-    //  - (maybe should just be rgb since I don't think will be stacked?)
     glNamedBufferStorage(this->m_ssboColor, this->m_bitmap->size()*sizeof(unsigned int), (const void *)0, GL_DYNAMIC_STORAGE_BIT);
 
     // Framebuffer setup
@@ -123,9 +135,9 @@ BitmapFramebuffer::BitmapFramebuffer(
     }
     this->m_shaderPg = shaderIds[0];
     glUseProgram(this->m_shaderPg);
-    this->m_uFbRes = glGetUniformLocation(this->m_shaderPg, "u_Res");
-    this->m_uBitmapDim = glGetUniformLocation(this->m_shaderPg, "u_BitmapDim");
     this->m_uMVM = glGetUniformLocation(this->m_shaderPg, "u_ModelViewMat");
+    this->m_uBitmapDim = glGetUniformLocation(this->m_shaderPg, "u_BitmapDim");
+    this->m_uColorFormatFlag = glGetUniformLocation(this->m_shaderPg, "u_ColorFormatFlag");
 
     // Shader unbind
     glUseProgram(0);
@@ -153,7 +165,7 @@ void BitmapFramebuffer::render(bool toFb)
         this->bindFb();
     }
 
-    glUniform2i(this->m_uFbRes, this->m_renderW, this->m_renderH);
+    glUniform1ui(this->m_uColorFormatFlag, this->m_colorPackingFormat);
     glUniform2i(this->m_uBitmapDim, this->m_bmpW, this->m_bmpH);
     glUniformMatrix3fv(this->m_uMVM, 1, GL_TRUE, &this->m_mvm[0]);
 
