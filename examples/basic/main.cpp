@@ -9,9 +9,9 @@ void app(SDL_Window* window)
 {
     SDLEventHandler eH(window);
     BitmapFramebuffer bfb0(11, 11, 400, 400);
-    TextureWindow bfbDisp0("Display 0", bfb0.getTextureId());
+    TextureWindow bfbDisp0("Display 0");
     BitmapFramebuffer bfb1(11, 11, 400, 400, BitmapFramebuffer::SINGLE_BIT);
-    TextureWindow bfbDisp1("Display 1", bfb1.getTextureId());
+    TextureWindow bfbDisp1("Display 1");
 
     // Draw pattern on bitmap(s)
     auto bitmap0 = bfb0.getBitmap();
@@ -31,10 +31,10 @@ void app(SDL_Window* window)
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        bfbDisp0.drawWindow();
+        bfbDisp0.drawWindow(bfb0.getTextureId());
         if (bfbDisp0.didResize()) { bfb0.resizeRenderDim(bfbDisp0.width(), bfbDisp0.height()); }
         bfb0.render();
-        bfbDisp1.drawWindow();
+        bfbDisp1.drawWindow(bfb1.getTextureId());
         if (bfbDisp1.didResize()) { bfb1.resizeRenderDim(bfbDisp1.width(), bfbDisp1.height()); }
         bfb1.render();
 

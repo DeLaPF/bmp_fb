@@ -34,16 +34,15 @@ void destroyImguiGL()
     ImGui::DestroyContext();
 }
 
-TextureWindow::TextureWindow(std::string name, int textureId, unsigned int width, unsigned int height)
+TextureWindow::TextureWindow(std::string name, unsigned int width, unsigned int height)
 {
     this->m_name = name;
-    this->m_textureId = textureId;
     this->m_width = width;
     this->m_height = height;
     this->m_didResize = false;
 }
 
-void TextureWindow::drawWindow()
+void TextureWindow::drawWindow(int textureId)
 {
     ImGui::Begin(this->m_name.c_str(), NULL, ImGuiWindowFlags_NoTitleBar);
     ImGui::SetWindowSize(ImVec2((float)this->m_width, (float)this->m_height), ImGuiCond_FirstUseEver);
@@ -56,7 +55,7 @@ void TextureWindow::drawWindow()
     }
 
     ImGui::GetWindowDrawList()->AddImage(
-        this->m_textureId,
+        textureId,
         ImVec2(guiPos.x, guiPos.y),
         ImVec2(guiPos.x + guiDim.x, guiPos.y + guiDim.y),
         ImVec2(0, 1),

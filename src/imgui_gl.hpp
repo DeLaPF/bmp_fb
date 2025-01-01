@@ -11,9 +11,9 @@ void destroyImguiGL();
 
 class TextureWindow {
 public:
-    TextureWindow(std::string name, int textureId, unsigned int width = 400, unsigned int height = 400);
+    TextureWindow(std::string name, unsigned int width = 400, unsigned int height = 400);
 
-    void drawWindow();
+    void drawWindow(int textureId);
 
     bool didResize();
     unsigned int width();

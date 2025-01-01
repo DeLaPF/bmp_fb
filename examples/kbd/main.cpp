@@ -17,7 +17,7 @@ void app(SDL_Window* window)
 {
     SDLEventHandler eH(window);
     BitmapFramebuffer bfb0(101, 101, 400, 400);
-    TextureWindow bfbDisp0("Display 0", bfb0.getTextureId());
+    TextureWindow bfbDisp0("Display 0");
 
     // Draw pattern on bitmap(s)
     auto bitmap0 = bfb0.getBitmap();
@@ -59,7 +59,7 @@ void app(SDL_Window* window)
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        bfbDisp0.drawWindow();
+        bfbDisp0.drawWindow(bfb0.getTextureId());
         if (bfbDisp0.didResize()) { bfb0.resizeRenderDim(bfbDisp0.width(), bfbDisp0.height()); }
         bfb0.render();
 
