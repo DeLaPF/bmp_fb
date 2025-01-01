@@ -38,6 +38,9 @@ public:
     void bindFb();
     void unbindFb();
 
+    unsigned int bmpW() { return this->m_bmpW; }
+    unsigned int bmpH() { return this->m_bmpH; }
+
     // ColorPackingFormat Flags
     static const unsigned int RGBA = 0x1;
     static const unsigned int SINGLE_BIT = 0x2;

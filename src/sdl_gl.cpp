@@ -76,6 +76,8 @@ SDLEventHandler::SDLEventHandler(SDL_Window* window)
     this->m_window = window;
     SDL_GetWindowSize(this->m_window, &this->m_windowW, &this->m_windowH);
     this->m_windowShouldClose = false;
+    // TODO: there must be a better way to do this?
+    for (int i = 0; i < 40; i++) { this->m_ANkeymap[i] = false; }
 }
 
 void SDLEventHandler::handleEvents()
@@ -84,15 +86,36 @@ void SDLEventHandler::handleEvents()
     while (SDL_PollEvent(&event)) {
         // Forward to Imgui
         ImGui_ImplSDL2_ProcessEvent(&event);
-        if (event.type == SDL_QUIT
-            || (event.type == SDL_WINDOWEVENT
-            && event.window.event == SDL_WINDOWEVENT_CLOSE
-            && event.window.windowID == SDL_GetWindowID(this->m_window))) {
+        switch (event.type) {
+        case SDL_QUIT:
             this->m_windowShouldClose = true;
-        } else if (event.type == SDL_WINDOWEVENT) {
+            break;
+        case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_CLOSE &&
+                event.window.windowID == SDL_GetWindowID(this->m_window))
+            {
+                this->m_windowShouldClose = true;
+            }
             if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
                 SDL_GetWindowSize(this->m_window, &this->m_windowW, &this->m_windowH);
             }
+            break;
+        case SDL_KEYDOWN:
+        {
+            // TODO: why does defining this variable require enclosing scope?
+            // lsp was stating: `Cannot jump from switch statement to this case label`
+            auto sc = event.key.keysym.scancode;
+            if (sc < 39) { this->m_ANkeymap[sc] = true; }
+            break;
+        }
+        case SDL_KEYUP:
+        {
+            auto sc = event.key.keysym.scancode;
+            if (sc < 39) { this->m_ANkeymap[sc] = false; }
+            break;
+        }
+        default:
+            break;
         }
     }
 }

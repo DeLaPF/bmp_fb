@@ -5,8 +5,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_CXX_STANDARD 20)
 
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-    # TODO: enable options for building different examples
-    add_subdirectory(examples/basic)
+    set(build_default_ex TRUE)
+    if (${BUILD_EX_BASIC})
+        add_subdirectory(examples/basic)
+        set(build_default_ex FALSE)
+    endif()
+    if (${BUILD_EX_KBD})
+        add_subdirectory(examples/kbd)
+        set(build_default_ex FALSE)
+    endif()
+
+    if (${build_default_ex})
+        add_subdirectory(examples/kbd)
+    endif()
 endif()
 
 add_subdirectory(deps/SDL)

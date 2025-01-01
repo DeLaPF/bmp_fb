@@ -170,7 +170,8 @@ void BitmapFramebuffer::render(bool toFb)
     glUniformMatrix3fv(this->m_uMVM, 1, GL_TRUE, &this->m_mvm[0]);
 
     glViewport(0, 0, this->m_renderW, this->m_renderH);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    // TODO: enable setting clear color
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawElements(GL_TRIANGLES, (unsigned int)this->m_indices.size(), GL_UNSIGNED_INT, nullptr);
 
