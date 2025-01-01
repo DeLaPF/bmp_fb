@@ -10,5 +10,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC .)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC glad)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
-# target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2 SDL2::SDL2main)
-target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2)
+target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2-static)

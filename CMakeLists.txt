@@ -9,7 +9,6 @@ if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
     add_subdirectory(examples/basic)
 endif()
 
-set(SDL_STATIC ON)
 add_subdirectory(deps/SDL)
 
 add_library(glad STATIC deps/glad_lib/src/gl.c)
