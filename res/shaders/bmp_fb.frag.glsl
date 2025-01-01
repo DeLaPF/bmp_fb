@@ -6,8 +6,10 @@ layout(std430, binding = 0) readonly buffer ssbo0 {
 flat in uvec2 vBitmapCoord;
 in vec2 vTexCoord;
 
-uniform ivec2 u_BitmapDim;
+uniform uvec2 u_BitmapDim;
 uniform uint u_ColorFormatFlag;
+
+out vec4 fColor;
 
 // Color Packing format
 const uint MASK_RGBA = uint(0x1);
@@ -36,10 +38,10 @@ void main()
     float b = float((bitmap[colorUintInd]&MASK_B) >>  8) / (0xFF-1);
     float a = float((bitmap[colorUintInd]&MASK_A) >>  0) / (0xFF-1);
     // Unpack singleBit
-    float singleBit = float((bitmap[colorUintInd] >> (31-colorBitInd))&1);
+    float singleBit = float((bitmap[colorUintInd] >> (31-colorBitInd))&uint(1));
 
     vec4 color = vec4(r, g, b, a)*selRGBA;
     color += vec4(vec3(singleBit), 1.0)*selSINGLE_BIT;
 
-    gl_FragColor = color;
+    fColor = color;
 }

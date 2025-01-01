@@ -43,8 +43,8 @@ public:
     static const unsigned int SINGLE_BIT = 0x2;
 
 private:
-    int m_bmpW;
-    int m_bmpH;
+    unsigned int m_bmpW;
+    unsigned int m_bmpH;
     std::vector<unsigned int> m_vertices;
     std::vector<unsigned int> m_indices;
     std::shared_ptr<Bitmap> m_bitmap;

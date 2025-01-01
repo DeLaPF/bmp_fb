@@ -166,7 +166,7 @@ void BitmapFramebuffer::render(bool toFb)
     }
 
     glUniform1ui(this->m_uColorFormatFlag, this->m_colorPackingFormat);
-    glUniform2i(this->m_uBitmapDim, this->m_bmpW, this->m_bmpH);
+    glUniform2ui(this->m_uBitmapDim, this->m_bmpW, this->m_bmpH);
     glUniformMatrix3fv(this->m_uMVM, 1, GL_TRUE, &this->m_mvm[0]);
 
     glViewport(0, 0, this->m_renderW, this->m_renderH);
