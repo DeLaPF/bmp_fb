@@ -201,17 +201,51 @@ void BitmapFramebuffer::updateModelViewMatrix()
 {
     int w = this->m_renderW;
     int h = this->m_renderH;
-    unsigned int mW = this->m_bmpW;
-    unsigned int mH = this->m_bmpH;
+    unsigned int numPxHoriz = this->m_bmpW;
+    unsigned int numPxVert = this->m_bmpH;
 
-    float aspRW = w >= h ? ((float)w)/h : 1.0f;
-    float aspRH = w >= h ? 1.0f : ((float)h)/w;
-    float transW = -1.0f + (w >= h ? (w-h)/((float)w) : 0.0f);
-    float transH =  1.0f + (w >= h ? 0.0f : (w-h)/((float)h));
+    // Max width of pixel to fit all in render width
+    float maxPxSzW = ((float)w)/numPxHoriz;
+    // Max height of pixel to fit all in render height
+    float maxPxSzH = ((float)h)/numPxVert;
+    // Calc maximally sized (fits required number in both dims) square pixel
+    float pxSz = std::min(maxPxSzW, maxPxSzH);
+    // How many maximally sized square pixels will fit in render width and height
+    float numPxW = w/pxSz;
+    float numPxH = h/pxSz;
 
+    float unusedPxW = numPxW - numPxHoriz;
+    float unusedPxH = numPxH - numPxVert;
+    // To center W/H you must take the unused px (uPx) divided b 2
+    // to give us equal padding left-right and up-down (respectively).
+    // However simply diving by 2 does not give the correct translation because
+    // when making a multi transform matrix from space A->B
+    // translation happens "first".
+    // This means that we must scale our transform by the same factor or matrix is scaling by
+    // thus center(X/Y) = unusedPx(W/H)/2.0f * (+/-)2.0f/(numPx(W/H)
+    // which simplifies to the equations below
+    float centerX = unusedPxW/numPxW;
+    float centerY = -unusedPxH/numPxH;
+
+    // Remember that translation happens "first"
+    // it also helps to note that transformations do the "opposite" of what you might think
+    // translation "left" moves "right", and "up" moves "down"
+    // scaling by whole number shrinks, by fraction grows
+    // this is because instead of actually moving the things,
+    // its better to understand it as moving the space around them.
+    // Note: [(lower-left-corner), (upper-right-corner)]
+    // Thus translating by -1 and 1 moves space from:
+    //     [(-1,-1), (1,1)] to [(0,-2), (2,0)]
+    // scaling by 2 and -2 scales space from:
+    //     [(0,-2), (2,0)] to [(0,1), (1,0)]
+    // And on top of this we apply additional translation and scaling,
+    // to center the maximally-sized-square pixels on the screen.
+    // For better clarity this could be done with another matrix,
+    // but this way, I don't need a matrix math library
+    // (plus the intuation is fun)
     this->m_mvm = {
-        2.0f/(mW*aspRW), 0.0f, transW,
-        0.0f, -2.0f/(mH*aspRH), transH,
+        2.0f/(numPxW), 0.0f, -1.0f + centerX,
+        0.0f, -2.0f/(numPxH), 1.0f + centerY,
         0.0f, 0.0f, 0.0f
     };
 }

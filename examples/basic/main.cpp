@@ -8,10 +8,12 @@
 void app(SDL_Window* window)
 {
     SDLEventHandler eH(window);
-    BitmapFramebuffer bfb0(11, 11, 400, 400);
+    BitmapFramebuffer bfb0(11, 33, 400, 400);
     TextureWindow bfbDisp0("Display 0");
-    BitmapFramebuffer bfb1(11, 11, 400, 400, BitmapFramebuffer::SINGLE_BIT);
+    BitmapFramebuffer bfb1(33, 11, 400, 400, BitmapFramebuffer::SINGLE_BIT);
     TextureWindow bfbDisp1("Display 1");
+    BitmapFramebuffer bfb2(23, 23, 400, 400, BitmapFramebuffer::SINGLE_BIT);
+    TextureWindow bfbDisp2("Display 2");
 
     // Draw pattern on bitmap(s)
     auto bitmap0 = bfb0.getBitmap();
@@ -20,6 +22,9 @@ void app(SDL_Window* window)
     auto bitmap1 = bfb1.getBitmap();
     for (auto i = 0; i < bitmap1->size(); i++) { bitmap1->at(i) = 0xAAAAAAAA; }
     bfb1.updateBitmap();
+    auto bitmap2 = bfb2.getBitmap();
+    for (auto i = 0; i < bitmap2->size(); i++) { bitmap2->at(i) = 0xAAAAAAAA; }
+    bfb2.updateBitmap();
 
     // Main loop
     while (!eH.windowShouldClose()) {
@@ -37,6 +42,9 @@ void app(SDL_Window* window)
         bfbDisp1.drawWindow(bfb1.getTextureId());
         if (bfbDisp1.didResize()) { bfb1.resizeRenderDim(bfbDisp1.width(), bfbDisp1.height()); }
         bfb1.render();
+        bfbDisp2.drawWindow(bfb2.getTextureId());
+        if (bfbDisp2.didResize()) { bfb2.resizeRenderDim(bfbDisp2.width(), bfbDisp2.height()); }
+        bfb2.render();
 
         renderImguiFrame();
         SDL_GL_SwapWindow(window);
