@@ -6,7 +6,8 @@
 #include "SDL.h"
 #include "SDL_scancode.h"
 
-std::optional<SDL_Window*> initSDLGLWindow(int w, int h, int flags, std::string name = "SDL Window");
+int initSDL(int initFlags, int contextFlags);
+SDL_Window* initSDLGLWindow(int w, int h, int flags, std::string name = "SDL Window");
 std::optional<SDL_GLContext> initSDLGLContext(SDL_Window* window);
 void destroySDLGL(SDL_Window* window, SDL_GLContext glContext);
 

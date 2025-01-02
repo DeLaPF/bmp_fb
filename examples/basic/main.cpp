@@ -52,7 +52,8 @@ void app(SDL_Window* window)
 }
 
 int main(int argc, char **argv) {
-    SDL_Window* window = initSDLGLWindow(800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE).value();
+    if (initSDL(SDL_INIT_VIDEO, SDL_GL_CONTEXT_DEBUG_FLAG) < 0) { return 1; }
+    SDL_Window* window = initSDLGLWindow(800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     SDL_GLContext glContext = initSDLGLContext(window).value();
     initImguiGL(window, glContext);
 

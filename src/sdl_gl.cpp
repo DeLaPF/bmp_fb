@@ -27,15 +27,20 @@ static void handleGLError(
     ) << std::endl;
 }
 
-std::optional<SDL_Window*> initSDLGLWindow(int w, int h, int flags, std::string name)
+int initSDL(int initFlags, int contextFlags)
 {
     // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(initFlags) < 0) {
         SDL_Log("SDL initialization failed: %s", SDL_GetError());
-        return std::nullopt;
+        return -1;
     }
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, contextFlags);
 
+    return 0;
+}
+
+SDL_Window* initSDLGLWindow(int w, int h, int flags, std::string name)
+{
     // Create window with OpenGL context
     SDL_Window* window = SDL_CreateWindow(
         name.c_str(),
