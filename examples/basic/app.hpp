@@ -1,3 +1,5 @@
+#pragma once
+
 #include "application.hpp"
 #include "bitmap_fb.hpp"
 #include "imgui_gl.hpp"

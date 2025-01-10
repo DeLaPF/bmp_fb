@@ -1,3 +1,5 @@
+#pragma once
+
 namespace BFGengine {
     class Application {
     public:
