@@ -5,15 +5,14 @@
 #include "imgui_gl.hpp"
 #include "sdl_gl.hpp"
 
-static void loop(BFGengine::Application* app, SDL_Window* window)
+static void loop(BFGengine::Application* app, SDLEventHandler* eH, SDL_Window* window)
 {
-    SDLEventHandler eH(window);
-    while (!eH.windowShouldClose()) {
-        eH.handleEvents();
+    while (!eH->windowShouldClose()) {
+        eH->handleEvents();
         newImguiFrame();
 
         // Clear main screen
-        glViewport(0, 0, eH.windowW(), eH.windowH());
+        glViewport(0, 0, eH->windowW(), eH->windowH());
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -31,12 +30,13 @@ int main(int argc, char** argv) {
     SDL_Window* window = initSDLGLWindow(800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     SDL_GLContext glContext = initSDLGLContext(window).value();
     initImguiGL(window, glContext);
+    SDLEventHandler eH(window);
 
     // Application entrypoint (defined by client)
     // TODO: pass in window pointer on create or init
-    BFGengine::Application* app = BFGengine::CreateApplication();
+    BFGengine::Application* app = BFGengine::CreateApplication(window, &eH);
     app->onInit();
-    loop(app, window);
+    loop(app, &eH, window);
 
     // Engine teardown
     delete app;

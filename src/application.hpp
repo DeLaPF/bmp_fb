@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sdl_gl.hpp"
+
 namespace BFGengine {
     class Application {
     public:
@@ -11,5 +13,5 @@ namespace BFGengine {
 
     // Defined by the client (consumer of the engine)
     // returns a concrete class that conforms to the above interface
-    Application* CreateApplication();
+    Application* CreateApplication(SDL_Window* window, SDLEventHandler* eH);
 }

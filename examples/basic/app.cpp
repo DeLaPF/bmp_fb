@@ -39,7 +39,7 @@ void Basic::Application::onTick()
 }
 
 // Defines the application that will be ran by the engine
-BFGengine::Application* BFGengine::CreateApplication()
+BFGengine::Application* BFGengine::CreateApplication(SDL_Window* window, SDLEventHandler* eH)
 {
     return new Basic::Application();
 }
