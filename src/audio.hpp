@@ -4,21 +4,25 @@
 
 class WaveManager {
 public:
-    WaveManager(int sampleDuration);
+    WaveManager();
     ~WaveManager();
 
-    void genWaveSamples(int volume = 5000, int freq = 4, float sampleStepSize = 0.01f);
-    // void genWaveSamples(int duration, int volume = 5000, int freq = 4, float sampleStepSize = 0.01f);
+    void playWave(int freq, int volume);
+    void stopSound();
 
-    void pauseSample();
-    void playSample();
+private:
+    static void audioCallback(void* userdata, uint8_t* stream, int len);
+
 private:
     SDL_AudioDeviceID m_audioDevice;
     SDL_AudioSpec m_audioSpec;
 
-    int m_sampleDuration;
     int16_t* m_samples;
-    uint32_t m_numBytes;
+    uint32_t m_numSamples;
 
-    bool m_isPaused;
+    int m_curFreq;
+    int m_curVol;
+    float m_xOff;
+
+    bool m_isPlaying;
 };
