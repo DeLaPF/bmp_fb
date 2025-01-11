@@ -1,5 +1,6 @@
 set(SOURCES
     application.cpp
+    audio.cpp
     bitmap_fb.cpp
     imgui_gl.cpp
     sdl_gl.cpp

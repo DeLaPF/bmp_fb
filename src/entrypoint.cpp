@@ -33,6 +33,7 @@ int main(int argc, char** argv) {
     initImguiGL(window, glContext);
 
     // Application entrypoint (defined by client)
+    // TODO: pass in window pointer on create or init
     BFGengine::Application* app = BFGengine::CreateApplication();
     app->onInit();
     loop(app, window);

@@ -31,10 +31,21 @@ int initSDL(int initFlags, int contextFlags)
 {
     // Initialize SDL
     if (SDL_Init(initFlags) < 0) {
-        SDL_Log("SDL initialization failed: %s", SDL_GetError());
+        SDL_Log("SDL Initialization Failed: %s", SDL_GetError());
         return -1;
     }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, contextFlags);
+
+    return 0;
+}
+
+int initSDLSubsystem(int flags)
+{
+    // Initialize SDL
+    if (SDL_InitSubSystem(flags) < 0) {
+        SDL_Log("SDL Subsystem Initialization Failed: %s", SDL_GetError());
+        return -1;
+    }
 
     return 0;
 }
