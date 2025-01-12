@@ -1,17 +1,16 @@
+#include "BFGe/entrypoint.hpp"
 #include "app.hpp"
+#include "sdl_gl.hpp"
 
-Audio::Application::Application(SDL_Window* window, SDLEventHandler* eH)
-{
-    this->m_window = window;
-    this->m_eH = eH;
-}
+Audio::Application::Application(BFGe::Engine* engine) { this->m_engine = engine; }
 Audio::Application::~Application() {}
 
 void Audio::Application::onInit() {}
 
 void Audio::Application::onTick()
 {
-    if (this->m_eH->isANKeyPressed(SDL_SCANCODE_W)) {
+    SDLEventHandler* eH = this->m_engine->getEventHandler();
+    if (eH->isANKeyPressed(SDL_SCANCODE_W)) {
         m_wavM.playWave(4, 10000);
     } else {
         m_wavM.stopSound();
@@ -19,9 +18,9 @@ void Audio::Application::onTick()
 }
 
 // Defines the application that will be ran by the engine
-BFGengine::Application* BFGengine::CreateApplication(SDL_Window* window, SDLEventHandler* eH)
+BFGe::Application* BFGe::CreateApplication(BFGe::Engine* engine)
 {
     initSDLSubsystem(SDL_INIT_AUDIO);
 
-    return new Audio::Application(window, eH);
+    return new Audio::Application(engine);
 }

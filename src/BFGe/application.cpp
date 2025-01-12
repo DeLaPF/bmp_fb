@@ -4,4 +4,4 @@
 // This is due to inherited destructors not overriding the base definition,
 // but instead calling the destructors in reverse up the heirarchy tree
 // Thus every class must have a destructor (or so I have come to understand)
-BFGengine::Application::~Application() {}
+BFGe::Application::~Application() {}

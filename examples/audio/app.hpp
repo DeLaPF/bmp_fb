@@ -1,12 +1,13 @@
 #pragma once
 
-#include "application.hpp"
+#include "BFGe/BFGe.hpp"
+#include "BFGe/application.hpp"
 #include "audio.hpp"
 
 namespace Audio {
-    class Application : public BFGengine::Application {
+    class Application : public BFGe::Application {
     public:
-        Application(SDL_Window* window, SDLEventHandler* eH);
+        Application(BFGe::Engine*);
         virtual ~Application() override;
 
         virtual void onInit() override;
@@ -14,7 +15,6 @@ namespace Audio {
 
     private:
         WaveManager m_wavM;
-        SDL_Window* m_window;
-        SDLEventHandler* m_eH;
+        BFGe::Engine* m_engine;
     };
 }

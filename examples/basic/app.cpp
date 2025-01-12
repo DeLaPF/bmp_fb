@@ -1,5 +1,8 @@
 #include "app.hpp"
 
+#include "BFGe/BFGe.hpp"
+#include "BFGe/entrypoint.hpp"
+
 Basic::Application::Application() :
     bfb0(11, 33, 400, 400),
     bfbDisp0("Display 0"),
@@ -39,7 +42,7 @@ void Basic::Application::onTick()
 }
 
 // Defines the application that will be ran by the engine
-BFGengine::Application* BFGengine::CreateApplication(SDL_Window* window, SDLEventHandler* eH)
+BFGe::Application* BFGe::CreateApplication(BFGe::Engine* engine)
 {
     return new Basic::Application();
 }

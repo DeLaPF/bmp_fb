@@ -1,11 +1,11 @@
 #pragma once
 
-#include "application.hpp"
+#include "BFGe/application.hpp"
 #include "bitmap_fb.hpp"
 #include "imgui_gl.hpp"
 
 namespace Basic {
-    class Application : public BFGengine::Application {
+    class Application : public BFGe::Application {
     public:
         Application();
         virtual ~Application() override;
