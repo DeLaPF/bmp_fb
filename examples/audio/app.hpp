@@ -2,7 +2,7 @@
 
 #include "BFGe/BFGe.hpp"
 #include "BFGe/application.hpp"
-#include "audio.hpp"
+#include "BFGe/audio.hpp"
 
 namespace Audio {
     class Application : public BFGe::Application {

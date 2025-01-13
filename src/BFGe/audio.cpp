@@ -22,8 +22,6 @@ WaveManager::WaveManager()
     this->m_audioSpec.freq = 44100;
     this->m_audioSpec.format = AUDIO_S16SYS;
     this->m_audioSpec.channels = 1;
-    // TODO: currently 1 second worth of samples, unsure if longer duration is needed
-    // this->m_audioSpec.samples = this->m_audioSpec.freq;
     this->m_audioSpec.samples = 1024;
     this->m_audioSpec.userdata = this;
     this->m_audioSpec.callback = audioCallback;
@@ -47,7 +45,6 @@ WaveManager::~WaveManager() {
 void WaveManager::audioCallback(void* userdata, uint8_t* stream, int len)
 {
     WaveManager* wM = static_cast<WaveManager*>(userdata);
-    // TODO: cast and length calc seems dangerous, but should be ok?
     genWaveSamples((int16_t*)stream, len/2, wM->m_xOff, wM->m_curFreq, wM->m_curVol);
 }
 

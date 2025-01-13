@@ -1,13 +1,12 @@
 set(SOURCES
     BFGe/BFGe.cpp
     BFGe/application.cpp
-
-    audio.cpp
-    bitmap_fb.cpp
-    imgui_gl.cpp
-    sdl_gl.cpp
-    shader_compiler.cpp
-    shader_linker.cpp
+    BFGe/audio.cpp
+    BFGe/bitmap_fb.cpp
+    BFGe/imgui_gl.cpp
+    BFGe/sdl_gl.cpp
+    BFGe/shader_compiler.cpp
+    BFGe/shader_linker.cpp
 )
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC .)

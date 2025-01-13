@@ -6,7 +6,9 @@
 
 #include "glad/gl.h"
 
-#include "shader_linker.hpp"
+#include "BFGe/shader_compiler.hpp"
+
+#include "generated/bmpfg_shaders.h"
 
 // Note: expects required gl objects to be bound
 static void createTextureFb(int w, int h, int texId, unsigned int rbo)
@@ -122,18 +124,7 @@ BitmapFramebuffer::BitmapFramebuffer(
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // Shader setup
-    const char* relPath = "res/shaders";
-    const std::vector<std::string> names = { "bmp_fb" };
-    std::vector<ShaderPair> pairs = linkShaders(relPath, &names);
-    std::vector<unsigned int> shaderIds = compileShaders(pairs);
-    if (shaderIds.size() < 1) {
-        std::cout << std::format(
-            "ERROR [Shaders]: no valid shaders found at: {}",
-            relPath
-        ) << std::endl;
-        exit(1);
-    }
-    this->m_shaderPg = shaderIds[0];
+    this->m_shaderPg = createShader(BMP_FB_VERT, BMP_FB_FRAG);
     glUseProgram(this->m_shaderPg);
     this->m_uMVM = glGetUniformLocation(this->m_shaderPg, "u_ModelViewMat");
     this->m_uBitmapDim = glGetUniformLocation(this->m_shaderPg, "u_BitmapDim");

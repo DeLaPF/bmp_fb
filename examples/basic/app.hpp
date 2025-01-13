@@ -1,8 +1,8 @@
 #pragma once
 
 #include "BFGe/application.hpp"
-#include "bitmap_fb.hpp"
-#include "imgui_gl.hpp"
+#include "BFGe/bitmap_fb.hpp"
+#include "BFGe/imgui_gl.hpp"
 
 namespace Basic {
     class Application : public BFGe::Application {

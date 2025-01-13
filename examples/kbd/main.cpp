@@ -5,9 +5,9 @@
 #include "glad/gl.h"
 #include "SDL.h"
 
-#include "bitmap_fb.hpp"
-#include "imgui_gl.hpp"
-#include "sdl_gl.hpp"
+#include "BFGe/bitmap_fb.hpp"
+#include "BFGe/imgui_gl.hpp"
+#include "BFGe/sdl_gl.hpp"
 
 struct iVec2 {
     int x, y;

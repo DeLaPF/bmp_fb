@@ -25,6 +25,7 @@ static void handleGLError(
         " - Message: {}\n",
         source, type, id, severity, message
     ) << std::endl;
+    exit(1);
 }
 
 int initSDL(int initFlags, int contextFlags)

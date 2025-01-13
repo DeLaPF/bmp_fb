@@ -12,3 +12,8 @@ Remeber `git clone --recursive ...`
 Note:
 - `python -m glad --help` (For more info: generating for vulkan, rust, etc.)
 - Ran with python 3.13, likely works with older as well, but not tested
+
+## Development
+### Shaders
+Any changes to shader code should be followed by running:
+- `python gen_shader_headers`
