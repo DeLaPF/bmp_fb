@@ -7,7 +7,7 @@
 #include "imgui_gl.hpp"
 
 namespace BFGe {
-    Engine::Engine()
+    Engine::Engine(int argc, char** argv)
     {
         // TODO: will likely want to give some control of sizing, flags, and window name back to the client
         if (initSDL(SDL_INIT_VIDEO, SDL_GL_CONTEXT_DEBUG_FLAG) < 0) {
@@ -18,6 +18,9 @@ namespace BFGe {
         initImguiGL(this->m_window, this->m_sdlGLContext);
 
         this->m_eventHandler = new SDLEventHandler(this->m_window);
+
+        this->m_argc = argc;
+        this->m_argv = argv;
     }
 
     Engine::~Engine()

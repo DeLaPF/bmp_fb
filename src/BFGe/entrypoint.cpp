@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv) {
     // Engine initialization
-    BFGe::Engine* engine = new BFGe::Engine();
+    BFGe::Engine* engine = new BFGe::Engine(argc, argv);
 
     // Application entrypoint (defined by client)
     BFGe::Application* app = BFGe::CreateApplication(engine);
