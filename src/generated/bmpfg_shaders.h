@@ -73,7 +73,7 @@ const char* BMP_FB_FRAG =
     "    float b = float((bitmap[colorUintInd]&MASK_B) >>  8) / (0xFF-1);\n"
     "    float a = float((bitmap[colorUintInd]&MASK_A) >>  0) / (0xFF-1);\n"
     "    // Unpack singleBit\n"
-    "    float singleBit = float((bitmap[colorUintInd] >> (31-colorBitInd))&uint(1));\n"
+    "    float singleBit = float((bitmap[colorUintInd] >> colorBitInd)&uint(1));\n"
     "\n"
     "    vec4 color = vec4(r, g, b, a)*selRGBA;\n"
     "    color += vec4(vec3(singleBit), 1.0)*selSINGLE_BIT;\n"

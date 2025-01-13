@@ -38,7 +38,7 @@ void main()
     float b = float((bitmap[colorUintInd]&MASK_B) >>  8) / (0xFF-1);
     float a = float((bitmap[colorUintInd]&MASK_A) >>  0) / (0xFF-1);
     // Unpack singleBit
-    float singleBit = float((bitmap[colorUintInd] >> (31-colorBitInd))&uint(1));
+    float singleBit = float((bitmap[colorUintInd] >> colorBitInd)&uint(1));
 
     vec4 color = vec4(r, g, b, a)*selRGBA;
     color += vec4(vec3(singleBit), 1.0)*selSINGLE_BIT;
