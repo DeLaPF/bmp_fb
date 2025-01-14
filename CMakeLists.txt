@@ -45,4 +45,9 @@ target_include_directories(imgui PUBLIC deps/SDL/include/)
 # imgui/backends/ contains the SDL implementation
 target_include_directories(imgui PUBLIC deps/imgui/ deps/imgui/backends/)
 
+# TODO: should only the headers be included?
+# How would that be passed down to src/CMakeLists.txt?
+# maybe just library of include files?
+add_subdirectory(deps/spdlog)
+
 add_subdirectory(src bmp_fb)

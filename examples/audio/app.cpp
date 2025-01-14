@@ -1,6 +1,7 @@
 #include "app.hpp"
 
 #include "BFGe/entrypoint.hpp"
+#include "BFGe/logger.hpp"
 #include "BFGe/sdl_gl.hpp"
 
 Audio::Application::Application(BFGe::Engine* engine) { this->m_engine = engine; }
@@ -21,6 +22,7 @@ void Audio::Application::onTick()
 // Defines the application that will be ran by the engine
 BFGe::Application* BFGe::CreateApplication(BFGe::Engine* engine)
 {
+    BFGE_CLIENT_WARN("Initializing Audio could fail");
     initSDLSubsystem(SDL_INIT_AUDIO);
 
     return new Audio::Application(engine);
