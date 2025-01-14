@@ -1,12 +1,10 @@
 #include "entrypoint.hpp"
 
-#include "logger.hpp"
+#include "logging.hpp"
 #include "application.hpp"
 #include "BFGe.hpp"
 
 int main(int argc, char** argv) {
-    BFGe::Logger::Init();
-
     BFGE_CORE_INFO("Initializing Engine");
     // Engine initialization
     BFGe::Engine* engine = new BFGe::Engine(argc, argv);

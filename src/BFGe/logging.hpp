@@ -5,16 +5,23 @@
 #include "spdlog/spdlog.h"
 
 namespace BFGe {
+    class Log {
+    public:
+        Log(std::string name);
+
+        std::shared_ptr<spdlog::logger>& GetLogger() { return m_logger; }
+    private:
+        std::shared_ptr<spdlog::logger> m_logger;
+    };
+
     // static class to enable engine and client logging with macros
     class Logger {
     public:
-        static void Init();
-
-        static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_coreLogger; }
-        static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_clientLogger; }
+        static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return s_coreLogger.GetLogger(); }
+        static std::shared_ptr<spdlog::logger>& GetClientLogger() { return s_clientLogger.GetLogger(); }
     private:
-        static std::shared_ptr<spdlog::logger> s_coreLogger;
-        static std::shared_ptr<spdlog::logger> s_clientLogger;
+        static Log s_coreLogger;
+        static Log s_clientLogger;
     };
 }
 

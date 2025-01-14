@@ -4,7 +4,7 @@ set(SOURCES
     BFGe/audio.cpp
     BFGe/bitmap_fb.cpp
     BFGe/imgui_gl.cpp
-    BFGe/logger.cpp
+    BFGe/logging.cpp
     BFGe/sdl_gl.cpp
     BFGe/shader_compiler.cpp
     BFGe/shader_linker.cpp

@@ -1,7 +1,7 @@
 #include "app.hpp"
 
 #include "BFGe/entrypoint.hpp"
-#include "BFGe/logger.hpp"
+#include "BFGe/logging.hpp"
 #include "BFGe/sdl_gl.hpp"
 
 Audio::Application::Application(BFGe::Engine* engine) { this->m_engine = engine; }
